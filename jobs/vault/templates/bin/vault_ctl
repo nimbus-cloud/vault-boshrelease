@@ -9,6 +9,23 @@ source /var/vcap/jobs/vault/helpers/ctl_setup.sh 'vault'
 export PORT=${PORT:-5000}
 export LANG=en_US.UTF-8
 
+<%
+  schema = "http"
+  if_p("vault.listener.tcp.tls.certificate", "") do |cert|
+    if_p("vault.listener.tcp.tls.key", "") do |key|
+      if cert != "" and key != ""
+        schema = "https"
+      end
+    end
+  end
+
+  local_addr=""
+  unless p("vault.ha.domain","").empty?
+    hostname = p("vault.ha.name").gsub('(deployment)', spec.deployment.to_s).gsub('(index)', spec.index.to_s)
+    local_addr = "#{schema}://#{hostname}.#{p("vault.ha.domain")}:#{p("vault.listener.tcp.port")}"
+  end
+%>
+
 case $1 in
 
   start)
@@ -19,7 +36,7 @@ case $1 in
     echo $! > $PIDFILE
     <% unless p("vault.unseal_key").empty? %>
     sleep 5
-    VAULT_ADDR='http://127.0.0.1:<%= p("vault.listener.tcp.port") %>' vault unseal '<%= p("vault.unseal_key") %>'
+    VAULT_ADDR='<%= local_addr %>' vault unseal '<%= p("vault.unseal_key") %>'
     <% end %>
 
     ;;
