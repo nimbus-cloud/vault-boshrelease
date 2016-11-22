@@ -35,8 +35,26 @@ case $1 in
 
     echo $! > $PIDFILE
     <% unless p("vault.unseal_key").empty? %>
-    sleep 5
-    VAULT_ADDR='<%= local_addr %>' vault unseal '<%= p("vault.unseal_key") %>'
+    for i in 1 2 3 4 5
+    do
+
+        set +e
+        OUTPUT=$(VAULT_ADDR='<%= local_addr %>' vault status | grep "Sealed: false")
+        set -e
+
+        if [ "$OUTPUT" == "Sealed: false" ]
+        then
+            echo "Vault unsealed"
+            break
+        else
+            echo "Vault sealed, unsealing"
+            set +e
+            VAULT_ADDR='<%= local_addr %>' vault unseal '<%= p("vault.unseal_key") %>'
+            set -e
+            sleep 2
+        fi
+
+    done
     <% end %>
 
     ;;
