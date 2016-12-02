@@ -37,13 +37,45 @@ header "Cleaning up from any previous deployments..."
 bosh target ${BOSH_LITE_TARGET}
 bosh -n delete deployment ${BOSH_LITE_DEPLOYMENT} --force || echo "continuing on..."
 
+header "Deleting orphaned disks..."
+disks=$(bosh disks --orphaned | grep n/a | awk '{print $2}')
+for disk in $disks; do
+  echo $disk | xargs -L1 bosh -n delete disk
+done
+
 header "Creating candidate BOSH release..."
 bosh -n create release
 bosh -n upload release --rebase || echo "Continuing..."
 
-header "Deploying to BOSH-lite..."
+header "Deploying to BOSH-lite with vault.backend.use_file..."
 ./templates/make_manifest warden
 bosh -n deploy
+
+header "Initialize and unseal vault"
+export VAULT_ADDR=http://10.58.111.44:8200
+seals_token=$(vault init)
+echo "$seals_token"
+
+export VAULT_TOKEN=$(echo "$seals_token" | grep 'Initial Root Token' | awk '{print $4}')
+
+cat > token.yml <<EOF
+---
+meta:
+  token: "${VAULT_TOKEN}"
+EOF
+cat token.yml
+
+./templates/make_manifest warden token.yml
+bosh -n deploy
+
+set -x
+vault unseal $(echo "$seals_token" | grep 'Unseal Key 1' | awk '{print $4}')
+vault unseal $(echo "$seals_token" | grep 'Unseal Key 2' | awk '{print $4}')
+vault unseal $(echo "$seals_token" | grep 'Unseal Key 3' | awk '{print $4}')
+set +x
+
+header "Sanity tests"
+bosh -n run errand sanity-test
 
 header "Cleaning up..."
 bosh -n delete deployment ${BOSH_LITE_DEPLOYMENT} --force || echo "continuing on..."
