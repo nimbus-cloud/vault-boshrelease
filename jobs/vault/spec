@@ -2,38 +2,29 @@
 name: vault
 packages:
 - vault
+- ttar
 templates:
   bin/vault_ctl: bin/vault_ctl
   bin/monit_debugger: bin/monit_debugger
+  bin/post-start: bin/post-start
   data/properties.sh.erb: data/properties.sh
+  data/unseal_keys.erb:  data/unseal_keys
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
   config/vault.conf.erb:  config/server.hcl
-  ssl/certificate.pem: ssl/certificate.pem
-  ssl/key.pem: ssl/key.pem
+  tls/certs.ttar: tls/certs.ttar
 properties:
-  vault.listener.tcp.address:
-    description: Address for TCP connection
-    default: 0.0.0.0
-  vault.listener.tcp.port:
-    description: Port for TCP connection
-    default: 8200
+  vault.config:
+    description: HCL string literal representing the full Vault configuration, will take precedence over any other configuration properties
 
-  vault.listener.tcp.tls.certificate:
-    description: Contents of the PEM-encoded TLS server certificate
-  vault.listener.tcp.tls.key:
-    description: Contents of the PEM-encoded TLS server private key
+  vault.update.step_down_token:
+    description: "For a true zero-downtime update to an HA cluster 'vault step-down' must be run on each node to force failover before the update. The token the must have the capabilities ['update', 'sudo'] on the '/sys/step-down' path for this to work."
 
-  vault.disable_mlock:
-    description: Disable mlock if you're crazy
-    default: false
-  vault.statsite_addr:
-    description: Address for statsite
-  vault.statsd_addr:
-    description: Address for StatsD
+  vault.update.unseal_keys:
+    description: "For a true zero-downtime update to an HA cluster each node must be individually unsealed once it has restarted. It is highly advised to generate new unseal keys via 'vault rekey' once the update has completed."
 
   #
-  # Consul backend
+  # TLS
   #
   vault.backend.use_consul:
     description: Use Cosul for data store
@@ -103,3 +94,6 @@ properties:
   vault.unseal_key:
     description: Unseal key
     default: ""
+
+  tls:
+    description: SSL certificate PEM or an array of SSL certificate PEM files
