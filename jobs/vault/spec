@@ -2,135 +2,59 @@
 name: vault
 packages:
 - vault
+- ttar
 templates:
   bin/vault_ctl: bin/vault_ctl
   bin/monit_debugger: bin/monit_debugger
+  bin/post-start: bin/post-start
   data/properties.sh.erb: data/properties.sh
+  data/unseal_keys.erb:  data/unseal_keys
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
   config/vault.conf.erb:  config/server.hcl
-  ssl/certificate.pem: ssl/certificate.pem
-  ssl/key.pem: ssl/key.pem
-  ssl/ca_certificate.pem: ssl/ca_certificate.pem
-  ssl/consul_certificate.pem: ssl/consul_certificate.pem
-  ssl/consul_key.pem: ssl/consul_key.pem
+  tls/certs.ttar: tls/certs.ttar
 properties:
-  vault.listener.tcp.address:
-    description: Address for TCP connection
-    default: 0.0.0.0
-  vault.listener.tcp.port:
-    description: Port for TCP connection
-    default: 8200
-
-  vault.listener.tcp.tls.certificate:
-    description: Contents of the PEM-encoded TLS server certificate
-  vault.listener.tcp.tls.key:
-    description: Contents of the PEM-encoded TLS server private key
-  vault.listener.tcp.tls.min_version:
-    description: Minimum TLS version to use
-    default: "tls12"
-
-  vault.listener.cluster.address:
-    description: Address to bind to for cluster server-to-server requests
-    default: 0.0.0.0
-  vault.listener.cluster.port:
-    description: Port for cluster address required for server-to-server connection
-    default: 8201
-
-  vault.ha.name:
-    description: "The DNS hostname to advertise in HA configuration.  The keywords (deployment) and (index) will be replaced by the configured deployment and instance index (i.e. 'prod-vault' and '3')"
-    default: "(deployment)-(index)"
-  vault.ha.domain:
-    description: "The DNS domain name to advertise in HA configuration.  If unspecified, advertise_addr will not be set."
-  vault.ha.redirect_address:
-    description: "This is the address to advertise to other Vault servers in the cluster for client redirection"
-  vault.ha.cluster_address:
-    description: "This is the address to advertise to other Vault servers in the cluster for request forwarding."
-  vault.ha.disable_clustering:
-    description: "This controls whether clustering features (currently, request forwarding) are enabled"
-    default: "true"
-
-  vault.disable_mlock:
-    description: Disable mlock if you're crazy
-    default: false
-  vault.statsite_addr:
-    description: Address for statsite
-  vault.statsd_addr:
-    description: Address for StatsD
-
-  #
-  # Consul backend
-  #
-  vault.backend.use_consul:
-    description: Use Cosul for data store
-    default: false
-  vault.backend.consul.path:
-    description: Path for Consul
-    default: vault/
-  vault.backend.consul.address:
-    description: Address for Consul
-  vault.backend.consul.scheme:
-    description: Scheme for Consul
-  vault.backend.consul.datacenter:
-    description: Datacenter for Consul
-  vault.backend.consul.token:
-    description: Access Token for Consul
-  vault.backend.consul.check_timeout:
-    description: The check interval used to send health check information to consul.
-    default: "5s"
-  vault.backend.consul.max_parallel:
-    description: The maximum number of concurrent requests to Consul.
-    default: 128
-  vault.backend.consul.tls.skip_verify:
-    description: Indicates whether host verification should be disabled.
-    default: false
-  vault.backend.consul.tls.min_version:
-    description: Minimum TLS version to use
-    default: "tls12"
-  vault.backend.consul.tls.ca_certificate:
-    description: Contents of the PEM-encoded TLS CA certificate
-  vault.backend.consul.tls.certificate:
-    description: Contents of the PEM-encoded TLS server certificate
-  vault.backend.consul.tls.key:
-    description: Contents of the PEM-encoded TLS server private key
-
-  #
-  # In-Memory backend
-  #
-  vault.backend.use_inmem:
-    description: Use In Memory backend
+  vault.skip_verify:
+    description: Do not verify Vault's presented certificate before communicating with it. Set in the environment when monit scripts run the Vault CLI
     default: false
 
-  #
-  # File backend
-  #
-  vault.backend.use_file:
-    description: Use File backend
-    default: false
-  vault.backend.file.path:
-    description: Path for File backend
-    default: /var/vcap/store/
+vault.unseal_key:
+  description: Unseal key
+  default: ""
+
+  vault.addr:
+    description: Address of the Vault server expressed as a URL and port. Set in the environment when monit scripts run the Vault CLI
+    default: https://127.0.0.1:8200
+
+  vault.config:
+    description: HCL string literal representing the full Vault configuration, will take precedence over any other configuration properties
+
+  vault.update.step_down_token:
+    description: "For a true zero-downtime update to an HA cluster 'vault step-down' must be run on each node to force failover before the update. The token the must have the capabilities ['update', 'sudo'] on the '/sys/step-down' path for this to work."
+
+  vault.update.unseal_keys:
+    description: "For a true zero-downtime update to an HA cluster each node must be individually unsealed once it has restarted. It is highly advised to generate new unseal keys via 'vault rekey' once the update has completed."
 
   #
-  # Amazon S3 backend
+  # TLS
   #
-  vault.backend.use_s3:
-    description: Use S3 backend
-    default: false
-  vault.backend.s3.bucket:
-    description: S3 bucket name
-  vault.backend.s3.access_key:
-    description: AWS access key
-  vault.backend.s3.secret_key:
-    description: AWS secret key
-  vault.backend.s3.region:
-    description: AWS region
-    default: us-east-1
-  vault.backend.s3.endpoint:
-    description: AWS S3 endpoint
-  vault.backend.s3.session_token:
-    description: AWS session token
-
-  vault.unseal_key:
-    description: Unseal key
-    default: ""
+  # vault.backend.use_s3:
+  #   description: Use S3 backend
+  #   default: false
+  # vault.backend.s3.bucket:
+  #   description: S3 bucket name
+  # vault.backend.s3.access_key:
+  #   description: AWS access key
+  # vault.backend.s3.secret_key:
+  #   description: AWS secret key
+  # vault.backend.s3.region:
+  #   description: AWS region
+  #   default: us-east-1
+  # vault.backend.s3.endpoint:
+  #   description: AWS S3 endpoint
+  # vault.backend.s3.session_token:
+  #   description: AWS session token
+  #
+  # vault.unseal_key:
+  #   description: Unseal key
+  #   default: ""
