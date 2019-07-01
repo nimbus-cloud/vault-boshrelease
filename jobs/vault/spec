@@ -12,6 +12,7 @@ templates:
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
   config/vault.conf.erb:  config/server.hcl
+  config/additional_config.ttar.erb: config/additional_config.ttar
   tls/certs.ttar: tls/certs.ttar
 properties:
   vault.skip_verify:
@@ -31,26 +32,3 @@ properties:
   vault.update.unseal_keys:
     description: "For a true zero-downtime update to an HA cluster each node must be individually unsealed once it has restarted. It is highly advised to generate new unseal keys via 'vault rekey' once the update has completed."
 
-  #
-  # TLS
-  #
-  # vault.backend.use_s3:
-  #   description: Use S3 backend
-  #   default: false
-  # vault.backend.s3.bucket:
-  #   description: S3 bucket name
-  # vault.backend.s3.access_key:
-  #   description: AWS access key
-  # vault.backend.s3.secret_key:
-  #   description: AWS secret key
-  # vault.backend.s3.region:
-  #   description: AWS region
-  #   default: us-east-1
-  # vault.backend.s3.endpoint:
-  #   description: AWS S3 endpoint
-  # vault.backend.s3.session_token:
-  #   description: AWS session token
-  #
-  # vault.unseal_key:
-  #   description: Unseal key
-  #   default: ""
