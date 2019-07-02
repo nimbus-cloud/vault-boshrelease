@@ -1,3 +1,8 @@
 
 # vault
-Bumped https://github.com/hashicorp/vault to v0.11.5
+
+- Bumped vault to v1.1.2
+
+# vault
+
+- Bumped vault to v1.1.3
