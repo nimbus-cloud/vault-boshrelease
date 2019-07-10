@@ -2,7 +2,7 @@
 name: sanity-test
 packages: [jq, vault]
 templates:
-  bin/run: bin/run
+  bin/errand.sh.erb: bin/run
   bin/run-vault-tests.sh: bin/run-vault-tests.sh
   bin/run-broker-tests.sh: bin/run-broker-tests.sh
   bin/create-service: bin/create-service
